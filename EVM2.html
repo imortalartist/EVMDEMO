@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Demo Voting</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      margin: 0;
+      background: #f3f4f6;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .candidate {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .candidate-number {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #2563eb;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    button {
+      margin-top: 16px;
+      width: 100%;
+      padding: 14px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1e40af;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="card">
+    <h2>Create Demo Voting</h2>
+
+    <div id="candidates"></div>
+
+    <button onclick="payNow()">PAY TO GENERATE LINK</button>
+  </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+const box = document.getElementById("candidates");
+
+// 10 candidates (NOT compulsory)
+for (let i = 1; i <= 10; i++) {
+  box.innerHTML += `
+    <div class="candidate">
+      <div class="candidate-number">Candidate ${i}</div>
+      <input type="text" placeholder="Candidate Name Here" id="name${i}">
+      <input type="file" accept="image/*" id="photo${i}">
+      <input type="file" accept="image/*" id="symbol${i}">
+    </div>
+  `;
+}
+
+function payNow() {
+  let candidates = [];
+
+  for (let i = 1; i <= 10; i++) {
+    const name = document.getElementById("name" + i).value;
+    const photo = document.getElementById("photo" + i).files[0];
+    const symbol = document.getElementById("symbol" + i).files[0];
+
+    // 👉 EMPTY ROW IGNORE
+    if (!name || !photo || !symbol) continue;
+
+    candidates.push({
+      name,
+      photo: URL.createObjectURL(photo),
+      symbol: URL.createObjectURL(symbol)
+    });
+  }
+
+  if (candidates.length === 0) {
+    alert("At least 1 candidate required");
+    return;
+  }
+
+  const encoded = btoa(JSON.stringify(candidates));
+
+  const options = {
+    key: "RAZORPAY_KEY_ID",
+    amount: 9900,
+    currency: "INR",
+    name: "Demo Voting",
+    handler: function () {
+      const link =
+        location.origin +
+        "/demo.html?data=" +
+        encoded;
+
+      document.body.innerHTML = `
+        <div style="display:flex;justify-content:center;align-items:center;height:100vh">
+          <div style="background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px">
+            <h3>Payment Successful</h3>
+            <p>Share this link:</p>
+            <input style="width:100%;padding:10px" value="${link}">
+          </div>
+        </div>
+      `;
+    }
+  };
+
+  new Razorpay(options).open();
+}
+</script>
+
+</body>
+</html>
